@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en"> 
+ <head> 
+  <meta charset="UTF-8"> 
+  <title>Deriv Kit Web Dashboard</title> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <meta name="author" content="Superhero"> 
+  <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #ff7e57, #feb47b);
+            color: white;
+            text-align: center;
+        }
+        header {
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        nav {
+            margin: 20px 0;
+        }
+        button {
+            margin: 0 15px;
+            padding: 10px;
+            background-color: #FFFFF;
+            border-radius: 5px;
+            color: #ff7e5f;
+            font-weight: bold;
+            font-style: italic;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        button:hover {
+            background-color: #ff7e5f;
+            color: white;
+        }
+        .content {
+            margin: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        footer {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 0.8em;
+        }
+        .buying {
+            color: blue;
+        }
+        .selling {
+            color: red;
+        }
+   import deriv_api
+import time
+
+# Initialize the API client
+client = deriv_api.Client()
+
+# Parameters
+RSI_LOW = 1256
+RSI_HIGH = 1356
+TAKE_PROFIT = 100
+STOP_LOSS = -100
+
+def calculate_rsi():
+    # Implement RSI calculation (using market data)
+    pass
+
+def place_trade(direction):
+    # Example: Place buy or sell based on direction
+    if direction == "buy":
+        client.buy()
+    elif direction == "sell":
+        client.sell()
+
+def main():
+    while True:
+        rsi_value = calculate_rsi()
+        if rsi_value < RSI_LOW:
+            place_trade("buy")
+        elif rsi_value > RSI_HIGH:
+            place_trade("sell")
+
+        # Check for take-profit and stop-loss
+        current_profit = client.get_current_profit()
+        if current_profit >= TAKE_PROFIT:
+            client.close_trade()
+        elif current_profit <= STOP_LOSS:
+            client.close_trade()
+
+        # Repeat after a delay
+        time.sleep(60)  # Run every minute
+
+main()
+        
+       
+    </style> 
+ </head> 
+ <body> 
+  <header> 
+   <h1>Welcome to Deriv Kit Web Dashboard</h1> 
+   <nav> <button onclick="showPage('sell')">Device Data</button> <button onclick="showPage('buy')">Alerts</button> 
+   </nav> 
+  </header> 
+  <div class="content fade" id="content"> 
+   <h2>Select a page</h2> 
+   <p>Please click a button above to view Sell or Buy.</p> 
+  </div> 
+  <footer> 
+   <p>© 2025 Deriv Kit Project / Developed by Aaron</p> 
+  </footer> 
+  <script>
+    let data = {
+        overUnder: 4,    // in ticks
+        upDown: 5,       // in ticks
+        matchesDiffer: 6 // in ticks
+    };
+
+    function generateBuyingAndSellingStrategy() {
+        // Generate buying and selling strategies between accumulators and multipliers
+        data.sell = (Math.random() * (9 - 3) + 3).toFixed(2);
+        data.buy = (Math.random() * (9 - 3) + 3).toFixed(2);
+
+        // Refresh data display
+        refreshDataDisplay();
+    }
+
+    function showPage(page) {
+        const contentDiv = document.getElementById('content');
+        if (page === 'buy') {
+            contentDiv.innerHTML = "<h2>Alerts</h2><p>No alerts at this moment.</p>";
+        } else if (page === 'sell') {
+            contentDiv.innerHTML = "<h2>Device Data</h2><p>Data is loading...</p>";
+        }
+    }
+
+    function refreshDataDisplay() {
+        const contentDiv = document.getElementById('content');
+        contentDiv.innerHTML =`
+            <p>Sell: <span class="${data.sell < 100? 'normal' : 'not-normal'}">${data.sell} R</span></p>
+            <p>Buy: <span class="${data.buy < 100? 'normal' : 'not-normal'}">${data.buy} B</span></p>
+        `;
+    }
+
+    // Simulate dynamic data refresh every second
+    setInterval(generateBuyingAndSellingStrategy, 1000);
+</script> 
+ </body>
+</html>
