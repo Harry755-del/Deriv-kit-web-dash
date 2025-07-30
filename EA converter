@@ -1,1 +1,84 @@
+//+------------------------------------------------------------------+
+//|                       EA_Clone_Template.mq5                      |
+//+------------------------------------------------------------------+
+#property copyright "YourName"
+#property link      "https://yourwebsite.com"
+#property version   "1.00"
+#property strict
 
+//--- input parameters
+input double LotSize = 0.1;
+input int TakeProfit = 100;
+input int StopLoss = 50;
+input ENUM_TIMEFRAMES Timeframe = PERIOD_M5;
+
+//--- Global variables
+double LastPrice = 0;
+datetime LastTradeTime = 0;
+
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+   Print("EA Clone Initialized");
+   return(INIT_SUCCEEDED);
+  }
+
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+   Print("EA Clone Deinitialized");
+  }
+
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+   // Example logic - clone from source EA
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   datetime currentTime = TimeCurrent();
+
+   // --- Clone condition: example BUY signal if RSI < 30
+   double rsi = iRSI(_Symbol, Timeframe, 14, PRICE_CLOSE, 0);
+   if(rsi < 30 && TimeSeconds(currentTime - LastTradeTime) > 60)
+     {
+      OpenOrder(OP_BUY);
+      LastTradeTime = currentTime;
+     }
+  }
+
+//+------------------------------------------------------------------+
+//| Clone: Order Open Function                                       |
+//+------------------------------------------------------------------+
+void OpenOrder(int type)
+  {
+   double price = (type == OP_BUY) ? SymbolInfoDouble(_Symbol, SYMBOL_ASK) : SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double sl = (type == OP_BUY) ? price - StopLoss * _Point : price + StopLoss * _Point;
+   double tp = (type == OP_BUY) ? price + TakeProfit * _Point : price - TakeProfit * _Point;
+
+   MqlTradeRequest request;
+   MqlTradeResult result;
+   ZeroMemory(request);
+   ZeroMemory(result);
+
+   request.action = TRADE_ACTION_DEAL;
+   request.symbol = _Symbol;
+   request.volume = LotSize;
+   request.price = price;
+   request.sl = NormalizeDouble(sl, _Digits);
+   request.tp = NormalizeDouble(tp, _Digits);
+   request.deviation = 10;
+   request.magic = 123456;
+   request.type = (type == OP_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+   request.type_filling = ORDER_FILLING_IOC;
+
+   if(!OrderSend(request, result))
+      Print("Trade failed: ", result.retcode);
+   else
+      Print("Trade success: ", result.order);
+  }
