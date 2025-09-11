@@ -1,84 +1,186 @@
-//+------------------------------------------------------------------+
-//|                       EA_Clone_Template.mq5                      |
-//+------------------------------------------------------------------+
-#property copyright "harry fx"
-#property link      "https://harry fx.com"
-#property version   "1.00"
-#property strict
 
-//--- input parameters
-input double LotSize = 0.1;
-input int TakeProfit = 100;
-input int StopLoss = 50;
-input ENUM_TIMEFRAMES Timeframe = PERIOD_M5;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EA Converter Bot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .screen {
+      display: none;
+      height: 100vh;
+      width: 100%;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+    }
+    .active {
+      display: flex;
+    }
+    .btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+      font-weight: bold;
+      margin-top: 20px;
+      transition: 0.3s;
+    }
+    .btn:hover {
+      background: #0056b3;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      margin: 10px 0;
+    }
+    .log {
+      background: #111;
+      color: #0f0;
+      padding: 10px;
+      height: 250px;
+      overflow-y: auto;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 14px;
+      margin-top: 15px;
+      text-align: left;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      margin: 5px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
 
-//--- Global variables
-double LastPrice = 0;
-datetime LastTradeTime = 0;
+  <!-- Welcome Screen -->
+  <div id="welcome" class="screen active">
+    <div>
+      <h1>Welcome to EA Converter Bot</h1>
+      <p>This bot trades with Take Profit levels: TP1, TP2, TP3 🚀</p>
+      <button class="btn" onclick="startBot()">Start Bot</button>
+    </div>
+  </div>
 
-//+------------------------------------------------------------------+
-//| Expert initialization function                                   |
-//+------------------------------------------------------------------+
-int OnInit()
-  {
-   Print("EA Clone Initialized");
-   return(INIT_SUCCEEDED);
-  }
+  <!-- Bot Screen -->
+  <div id="bot" class="screen">
+    <div class="container">
+      <h2>EA Converter Bot (with TP1, TP2, TP3)</h2>
+      <button onclick="openTrade(100, 'BUY')">Open BUY @100</button>
+      <button onclick="openTrade(100, 'SELL')">Open SELL @100</button>
+      <button onclick="simulatePrice()">Simulate Price Move</button>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
 
-//+------------------------------------------------------------------+
-//| Expert deinitialization function                                 |
-//+------------------------------------------------------------------+
-void OnDeinit(const int reason)
-  {
-   Print("EA Clone Deinitialized");
-  }
+  <script>
+    // Switch to bot screen
+    function startBot() {
+      document.getElementById("welcome").classList.remove("active");
+      document.getElementById("bot").classList.add("active");
+    }
 
-//+------------------------------------------------------------------+
-//| Expert tick function                                             |
-//+------------------------------------------------------------------+
-void OnTick()
-  {
-   // Example logic - clone from source EA
-   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
-   datetime currentTime = TimeCurrent();
+    // Bot Variables
+    let entryPrice = null;
+    let direction = null;
+    let tp1 = null, tp2 = null, tp3 = null;
 
-   // --- Clone condition: example BUY signal if RSI < 30
-   double rsi = iRSI(_Symbol, Timeframe, 14, PRICE_CLOSE, 0);
-   if(rsi < 30 && TimeSeconds(currentTime - LastTradeTime) > 60)
-     {
-      OpenOrder(OP_BUY);
-      LastTradeTime = currentTime;
-     }
-  }
+    // Logger
+    function logMessage(msg) {
+      const log = document.getElementById("log");
+      log.innerHTML += msg + "<br>";
+      log.scrollTop = log.scrollHeight;
+      console.log(msg);
+    }
 
-//+------------------------------------------------------------------+
-//| Clone: Order Open Function                                       |
-//+------------------------------------------------------------------+
-void OpenOrder(int type)
-  {
-   double price = (type == OP_BUY) ? SymbolInfoDouble(_Symbol, SYMBOL_ASK) : SymbolInfoDouble(_Symbol, SYMBOL_BID);
-   double sl = (type == OP_BUY) ? price - StopLoss * _Point : price + StopLoss * _Point;
-   double tp = (type == OP_BUY) ? price + TakeProfit * _Point : price - TakeProfit * _Point;
+    // Open Trade
+    function openTrade(price, tradeDirection) {
+      entryPrice = price;
+      direction = tradeDirection;
 
-   MqlTradeRequest request;
-   MqlTradeResult result;
-   ZeroMemory(request);
-   ZeroMemory(result);
+      // TP distances (you can adjust these values)
+      let tpDistance1 = 10;
+      let tpDistance2 = 20;
+      let tpDistance3 = 30;
 
-   request.action = TRADE_ACTION_DEAL;
-   request.symbol = _Symbol;
-   request.volume = LotSize;
-   request.price = price;
-   request.sl = NormalizeDouble(sl, _Digits);
-   request.tp = NormalizeDouble(tp, _Digits);
-   request.deviation = 10;
-   request.magic = 123456;
-   request.type = (type == OP_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
-   request.type_filling = ORDER_FILLING_IOC;
+      if (direction === "BUY") {
+        tp1 = price + tpDistance1;
+        tp2 = price + tpDistance2;
+        tp3 = price + tpDistance3;
+      } else {
+        tp1 = price - tpDistance1;
+        tp2 = price - tpDistance2;
+        tp3 = price - tpDistance3;
+      }
 
-   if(!OrderSend(request, result))
-      Print("Trade failed: ", result.retcode);
-   else
-      Print("Trade success: ", result.order);
-  }
+      logMessage(`✅ Trade opened at ${price} → Direction: ${direction}`);
+      logMessage(`🎯 Targets set → TP1: ${tp1}, TP2: ${tp2}, TP3: ${tp3}`);
+    }
+
+    // Check TP
+    function checkTakeProfit(currentPrice) {
+      if (!entryPrice || !direction) return;
+
+      if (direction === "BUY") {
+        if (tp1 && currentPrice >= tp1) { closePartial(0.3, "TP1 hit"); tp1 = null; }
+        if (tp2 && currentPrice >= tp2) { closePartial(0.3, "TP2 hit"); tp2 = null; }
+        if (tp3 && currentPrice >= tp3) { closeFull("TP3 hit"); resetTrade(); }
+      } else if (direction === "SELL") {
+        if (tp1 && currentPrice <= tp1) { closePartial(0.3, "TP1 hit"); tp1 = null; }
+        if (tp2 && currentPrice <= tp2) { closePartial(0.3, "TP2 hit"); tp2 = null; }
+        if (tp3 && currentPrice <= tp3) { closeFull("TP3 hit"); resetTrade(); }
+      }
+    }
+
+    // Helpers
+    function closePartial(percent, reason) {
+      logMessage(`📉 Closed ${percent * 100}% → ${reason}`);
+    }
+    function closeFull(reason) {
+      logMessage(`🏁 Closed full trade → ${reason}`);
+    }
+    function resetTrade() {
+      entryPrice = null;
+      direction = null;
+      tp1 = tp2 = tp3 = null;
+      logMessage("🔄 Trade reset ✅");
+    }
+
+    // Simulate price movement
+    function simulatePrice() {
+      if (!entryPrice) {
+        logMessage("⚠️ No trade open");
+        return;
+      }
+      let currentPrice = entryPrice + (Math.random() * 60 - 30); // simulate +/- 30
+      logMessage(`📊 Current price → ${currentPrice.toFixed(2)}`);
+      checkTakeProfit(currentPrice);
+    }
+  </script>
+</body>
+</html>
