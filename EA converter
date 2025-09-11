@@ -1,8 +1,8 @@
 //+------------------------------------------------------------------+
 //|                       EA_Clone_Template.mq5                      |
 //+------------------------------------------------------------------+
-#property copyright "YourName"
-#property link      "https://yourwebsite.com"
+#property copyright "harry fx"
+#property link      "https://harry fx.com"
 #property version   "1.00"
 #property strict
 
